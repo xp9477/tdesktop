@@ -1,3 +1,4 @@
+#include "ad_filter/ad_filter_engine.h"
 /*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
@@ -3594,6 +3595,18 @@ HistoryItem *Session::addNewMessage(
 	const auto peerId = PeerFromMessage(data);
 	if (!peerId || data.type() == mtpc_messageEmpty) {
 		return nullptr;
+	}
+
+	if (const auto h = history(peerId)) {
+		if (h->peer->isBroadcast()) {
+			QString messageText;
+			data.match([&](const MTPDmessage &d) {
+				messageText = qs(d.vmessage());
+			}, [](const auto &) {});
+			if (AdFilterEngine::Instance().shouldBlockMessage(true, messageText, peerId.value)) {
+				return nullptr;
+			}
+		}
 	}
 
 	if (type == NewMessageType::Unread

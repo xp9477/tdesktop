@@ -110,6 +110,8 @@ nice_target_sources(Telegram ${src_loc}
 PRIVATE
     ${style_files}
 
+    ad_filter/ad_filter_engine.cpp
+    ad_filter/ad_filter_engine.h
     api/api_attached_stickers.cpp
     api/api_attached_stickers.h
     api/api_authorizations.cpp

@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "comment": "本插件仅对广播频道(Broadcast Channel)生效，不影响群组与私聊",
+  "keywords": [
+    "代开发票",
+    "兼职刷单",
+    "博彩娱乐",
+    "点击链接领取福利",
+    "点击下方立即上车",
+    "内幕代码"
+  ],
+  "regex": [
+    "t\\.me\\/\\+[a-zA-Z0-9_-]+",
+    "\\b(USDT|BTC|ETH)\\s*(兑换|提现|返利)\\b",
+    "http[s]?:\\/\\/[^\\s]+\\.(top|xyz|cc|vip)"
+  ],
+  "whitelist_channels": []
+}

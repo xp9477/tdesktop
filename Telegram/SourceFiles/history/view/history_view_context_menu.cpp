@@ -1,3 +1,4 @@
+#include "ad_filter/ad_filter_engine.h"
 /*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
@@ -1819,6 +1820,33 @@ void FillContextMenuItems(
 		result->addAction(text, [=] {
 			list->copySelectedText();
 		}, &st::menuIconCopy);
+	}
+	if (request.overSelection
+		&& view
+		&& view->data()->history()->peer->isBroadcast()
+		&& !list->getSelectedText().empty()) {
+		const auto selected = list->getSelectedText().rich.text.trimmed();
+		if (!selected.isEmpty() && selected.size() <= 40) {
+			const auto preview = (selected.size() > 10)
+				? (selected.left(10) + "...")
+				: selected;
+			result->addAction(
+				QString("屏蔽关键词: \"%1\"").arg(preview),
+				[=] {
+					if (AdFilterEngine::Instance().addKeywordAndSave(selected)) {
+						Ui::Toast::Show(list, Ui::Toast::Config{
+							.text = QString("已将 \"%1\" 加入广告黑名单").arg(preview),
+							.st = &st::defaultToast,
+							.duration = 2000,
+						});
+						if (const auto currentItem = view->data()) {
+							currentItem->destroy();
+							list->update();
+						}
+					}
+				},
+				&st::menuIconBlock);
+		}
 	}
 	if (request.overSelection
 		&& view

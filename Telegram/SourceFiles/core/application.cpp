@@ -1,3 +1,4 @@
+#include "ad_filter/ad_filter_engine.h"
 /*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
@@ -936,6 +937,7 @@ void Application::badMtprotoConfigurationError() {
 void Application::startLocalStorage() {
 	Ui::GL::DetectLastCheckCrash();
 	Local::start();
+	AdFilterEngine::Instance().loadConfig(cWorkingDir() + "ad_filter.json");
 	_saveSettingsTimer.emplace([=] { saveSettings(); });
 	settings().saveDelayedRequests() | rpl::on_next([=] {
 		saveSettingsDelayed();
