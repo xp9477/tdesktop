@@ -1,6 +1,8 @@
 {
   "enabled": true,
-  "comment": "本插件仅对广播频道(Broadcast Channel)生效，不影响群组与私聊",
+  "comment": "本插件仅对频道生效；命中广告将替换为简短提示",
+  "replace_with_placeholder": true,
+  "channels_only": true,
   "keywords": [
     "代开发票",
     "兼职刷单",

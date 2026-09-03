@@ -3598,13 +3598,16 @@ HistoryItem *Session::addNewMessage(
 	}
 
 	if (const auto h = history(peerId)) {
-		if (h->peer->isBroadcast()) {
+		if (h->peer->isBroadcast() || h->peer->isChannel()) {
 			QString messageText;
 			data.match([&](const MTPDmessage &d) {
 				messageText = qs(d.vmessage());
 			}, [](const auto &) {});
-			if (AdFilterEngine::Instance().shouldBlockMessage(true, messageText, peerId.value)) {
-				return nullptr;
+			QString matchedKw;
+			if (AdFilterEngine::Instance().shouldBlockMessage(true, messageText, peerId.value, &matchedKw)) {
+				if (!AdFilterEngine::Instance().replaceWithPlaceholder()) {
+					return nullptr;
+				}
 			}
 		}
 	}

@@ -1,3 +1,4 @@
+#include "ad_filter/ad_filter_engine.h"
 /*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
@@ -565,6 +566,17 @@ HistoryItem::HistoryItem(
 					&history->session(),
 					data.ventities().value_or_empty())
 			};
+			const auto filterPeer = history->peer;
+			QString matchedKw;
+			if ((filterPeer->isBroadcast() || filterPeer->isChannel())
+				&& AdFilterEngine::Instance().shouldBlockMessage(true, textWithEntities.text, filterPeer->id.value, &matchedKw)) {
+				if (AdFilterEngine::Instance().replaceWithPlaceholder()) {
+					textWithEntities = TextWithEntities{
+						QString::fromUtf8("🚫 [已屏蔽一条广告消息: 匹配关键词 \"%1\"]").arg(matchedKw)
+					};
+					_media.reset();
+				}
+			}
 			setText(_media ? textWithEntities : EnsureNonEmpty(textWithEntities));
 		}
 		if (const auto groupedId = data.vgrouped_id()) {

@@ -1777,6 +1777,53 @@ void FillContextMenuItems(
 		&& Api::WhoReactedExists(item, Api::WhoReactedList::All);
 
 	AddReplyToMessageAction(result, request, list);
+
+	// 广告屏蔽快捷动作：只要有选中文本，或右键点击在单条短消息上，直接展示
+	do {
+		const auto selRich = list->getSelectedText().rich.text.trimmed();
+		const auto selReq = request.selectedText.text.trimmed();
+		const auto sel = !selRich.isEmpty() ? selRich : selReq;
+		if (!sel.isEmpty() && sel.size() <= 50) {
+			const auto preview = (sel.size() > 12) ? (sel.left(12) + "...") : sel;
+			result->addAction(
+				QString("🚫 屏蔽关键词: \"%1\"").arg(preview),
+				[=] {
+					if (AdFilterEngine::Instance().addKeywordAndSave(sel)) {
+						Ui::Toast::Show(list, Ui::Toast::Config{
+							.text = QString("已将 \"%1\" 加入黑名单并屏蔽").arg(preview),
+							.st = &st::defaultToast,
+							.duration = 2500,
+						});
+						if (item) {
+							item->destroy();
+						} else if (view && view->data()) {
+							view->data()->destroy();
+						}
+						list->update();
+					}
+				},
+				&st::menuIconBlock);
+		} else if (item && !item->originalText().text.trimmed().isEmpty()) {
+			const auto fullText = item->originalText().text.trimmed();
+			if (fullText.size() <= 35) {
+				const auto preview = (fullText.size() > 10) ? (fullText.left(10) + "...") : fullText;
+				result->addAction(
+					QString("🚫 屏蔽此短语: \"%1\"").arg(preview),
+					[=] {
+					if (AdFilterEngine::Instance().addKeywordAndSave(fullText)) {
+						Ui::Toast::Show(list, Ui::Toast::Config{
+							.text = QString("已将 \"%1\" 加入黑名单").arg(preview),
+							.st = &st::defaultToast,
+							.duration = 2500,
+						});
+						item->destroy();
+						list->update();
+					}
+				},
+				&st::menuIconBlock);
+			}
+		}
+	} while (false);
 	if (item) {
 		const auto media = item->media();
 		const auto document = media ? media->document() : nullptr;
@@ -1820,33 +1867,6 @@ void FillContextMenuItems(
 		result->addAction(text, [=] {
 			list->copySelectedText();
 		}, &st::menuIconCopy);
-	}
-	if (request.overSelection
-		&& view
-		&& view->data()->history()->peer->isBroadcast()
-		&& !list->getSelectedText().empty()) {
-		const auto selected = list->getSelectedText().rich.text.trimmed();
-		if (!selected.isEmpty() && selected.size() <= 40) {
-			const auto preview = (selected.size() > 10)
-				? (selected.left(10) + "...")
-				: selected;
-			result->addAction(
-				QString("屏蔽关键词: \"%1\"").arg(preview),
-				[=] {
-					if (AdFilterEngine::Instance().addKeywordAndSave(selected)) {
-						Ui::Toast::Show(list, Ui::Toast::Config{
-							.text = QString("已将 \"%1\" 加入广告黑名单").arg(preview),
-							.st = &st::defaultToast,
-							.duration = 2000,
-						});
-						if (const auto currentItem = view->data()) {
-							currentItem->destroy();
-							list->update();
-						}
-					}
-				},
-				&st::menuIconBlock);
-		}
 	}
 	if (request.overSelection
 		&& view
